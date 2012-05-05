@@ -666,7 +666,7 @@ $.TokenList = function (input, url_or_data, settings) {
         var token_values = $.map(saved_tokens, function (el) {
             if(typeof settings.tokenValue == 'function')
               return settings.tokenValue.call(this, el);
-            
+
             return el[settings.tokenValue];
         });
         hidden_input.val(token_values.join(settings.tokenDelimiter));
@@ -717,18 +717,33 @@ $.TokenList = function (input, url_or_data, settings) {
     // Populate the results dropdown with some results
     function populate_dropdown (query, results) {
         if(results && results.length) {
-            dropdown.empty();
-            var dropdown_ul = $("<ul>")
-                .appendTo(dropdown)
-                .mouseover(function (event) {
+            var isPopulated = dropdown.find('ul').length > 0;
+
+            var dropdown_ul;
+            if (isPopulated) {
+              dropdown_ul = $("<ul>")
+                                .mouseover(function (event) {
+                                  select_dropdown_item($(event.target).closest("li"));
+                                })
+                                .mousedown(function (event) {
+                                  add_token($(event.target).closest("li").data("tokeninput"));
+                                  hidden_input.change();
+                                  return false;
+                                })
+            } else {
+              dropdown.empty();
+              dropdown_ul = $("<ul>")
+                  .appendTo(dropdown)
+                  .mouseover(function (event) {
                     select_dropdown_item($(event.target).closest("li"));
-                })
-                .mousedown(function (event) {
+                  })
+                  .mousedown(function (event) {
                     add_token($(event.target).closest("li").data("tokeninput"));
                     hidden_input.change();
                     return false;
-                })
-                .hide();
+                  })
+                  .hide();
+            }
 
             $.each(results, function(index, value) {
                 var this_li = settings.resultsFormatter(value);
@@ -752,10 +767,14 @@ $.TokenList = function (input, url_or_data, settings) {
 
             show_dropdown();
 
-            if(settings.animateDropdown) {
-                dropdown_ul.slideDown("fast");
+            if (isPopulated) {
+              dropdown.html(dropdown_ul);
             } else {
+              if(settings.animateDropdown) {
+                dropdown_ul.slideDown("fast");
+              } else {
                 dropdown_ul.show();
+              }
             }
         } else {
             if(settings.noResultsText) {
@@ -794,7 +813,9 @@ $.TokenList = function (input, url_or_data, settings) {
             }
 
             if(query.length >= settings.minChars) {
-                show_dropdown_searching();
+                if (dropdown.find('ul').length === 0) {
+                  show_dropdown_searching();
+                }
                 clearTimeout(timeout);
 
                 timeout = setTimeout(function(){
@@ -882,7 +903,7 @@ $.TokenList = function (input, url_or_data, settings) {
     // Bring browser focus to the specified object.
     // Use of setTimeout is to get around an IE bug.
     // (See, e.g., http://stackoverflow.com/questions/2600186/focus-doesnt-work-in-ie)
-    // 
+    //
     // obj: a jQuery object to focus()
     function focus_with_timeout(obj) {
         setTimeout(function() { obj.focus(); }, 50);
