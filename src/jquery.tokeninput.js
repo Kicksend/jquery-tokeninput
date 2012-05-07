@@ -20,7 +20,7 @@ var DEFAULT_SETTINGS = {
     jsonContainer: null,
     contentType: "json",
 
-	// Prepopulation settings
+	  // Prepopulation settings
     prePopulate: null,
     processPrePopulate: false,
 
@@ -46,6 +46,7 @@ var DEFAULT_SETTINGS = {
     onAdd: null,
     onDelete: null,
     onReady: null,
+    onEmailDetected: null,
 
     // Other settings
     idPrefix: "token-input-",
@@ -286,11 +287,6 @@ $.TokenList = function (input, url_or_data, settings) {
                     add_token($(selected_dropdown_item).data("tokeninput"));
                     hidden_input.change();
                     return false;
-                  } else if ($(this).val().length && settings.allowedNewItems) {
-                      token_object = {}
-                      token_object[settings.propertyToSearch] = token_object[settings.tokenValue] = $(this).val()
-                      add_token(token_object);
-                      return false;
                   }
                   break;
 
@@ -776,6 +772,57 @@ $.TokenList = function (input, url_or_data, settings) {
                 dropdown_ul.show();
               }
             }
+        } else if (settings.onEmailDetected && /^(([^<>()[\]\\.,;:\s@\"]+(\.[^<>()[\]\\.,;:\s@\"]+)*)|(\".+\"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/.test(query)) {
+              var isPopulated = dropdown.find('ul').length > 0;
+
+              var dropdown_ul;
+              if (isPopulated) {
+                dropdown_ul = $("<ul>")
+                    .mouseover(function (event) {
+                      select_dropdown_item($(event.target).closest("li"));
+                    })
+                    .mousedown(function (event) {
+                      add_token($(event.target).closest("li").data("tokeninput"));
+                      hidden_input.change();
+                      return false;
+                    })
+              } else {
+                dropdown.empty();
+                dropdown_ul = $("<ul>")
+                    .appendTo(dropdown)
+                    .mouseover(function (event) {
+                      select_dropdown_item($(event.target).closest("li"));
+                    })
+                    .mousedown(function (event) {
+                      add_token($(event.target).closest("li").data("tokeninput"));
+                      hidden_input.change();
+                      return false;
+                    })
+                    .hide();
+              }
+              var response = settings.onEmailDetected.call(this, query);
+
+              var this_li = response.display;
+
+              this_li = $(this_li).appendTo(dropdown_ul);
+
+              this_li.addClass(settings.classes.dropdownItem);
+
+              this_li.data('tokeninput', response.item);
+
+              select_dropdown_item(this_li);
+
+              show_dropdown();
+
+              if (isPopulated) {
+                dropdown.html(dropdown_ul);
+              } else {
+                if (settings.animateDropdown) {
+                  dropdown_ul.slideDown("fast");
+                } else {
+                  dropdown_ul.show();
+                }
+              }
         } else {
             if(settings.noResultsText) {
                 dropdown.html("<p>"+settings.noResultsText+"</p>");
