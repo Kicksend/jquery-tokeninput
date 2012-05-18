@@ -813,17 +813,27 @@ $.TokenList = function (input, url_or_data, settings) {
                     })
                     .hide();
               }
-              var response = settings.onEmailDetected.call(this, query);
 
-              var this_li = response.display;
+              var responses = settings.onEmailDetected.call(this, query);
 
-              this_li = $(this_li).appendTo(dropdown_ul);
+              var this_li;
+              $.each(responses, function(index, value) {
+                  this_li = value.display;
 
-              this_li.addClass(settings.classes.dropdownItem);
+                  this_li = $(this_li).appendTo(dropdown_ul);
 
-              this_li.data('tokeninput', response.item);
+                  if(index % 2) {
+                      this_li.addClass(settings.classes.dropdownItem);
+                  } else {
+                      this_li.addClass(settings.classes.dropdownItem2);
+                  }
 
-              select_dropdown_item(this_li);
+                  if(index === 0) {
+                      select_dropdown_item(this_li);
+                  }
+
+                  $.data(this_li.get(0), "tokeninput", value.item);
+              });
 
               show_dropdown();
 
