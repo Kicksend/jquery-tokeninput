@@ -222,8 +222,6 @@ $.TokenList = function (input, url_or_data, settings) {
             var next_token;
 
             switch(event.keyCode) {
-                case KEY.LEFT:
-                case KEY.RIGHT:
                 case KEY.UP:
                 case KEY.DOWN:
                     if(!$(this).val()) {
@@ -472,10 +470,13 @@ $.TokenList = function (input, url_or_data, settings) {
 
     function checkTokenLimit() {
         if(settings.tokenLimit !== null && token_count >= settings.tokenLimit) {
-            input_box.hide();
             hide_dropdown();
-            return;
+            return true;
+        } else {
+            input_box.focus();
+            return false;
         }
+
     }
 
     function resize_input() {
@@ -531,7 +532,6 @@ $.TokenList = function (input, url_or_data, settings) {
 
         // Check the token limit
         if(settings.tokenLimit !== null && token_count >= settings.tokenLimit) {
-            input_box.hide();
             hide_dropdown();
         }
 
